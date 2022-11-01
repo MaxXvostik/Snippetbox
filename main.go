@@ -6,12 +6,12 @@ import (
 )
 
 // Создается функция-обработчик "home"
-
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Привет из Snippetbox"))
 }
 
 func main() {
+	
 	// Используется функция http.NewServeMux() для инициализации нового рутера
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
