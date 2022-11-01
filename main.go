@@ -11,7 +11,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	
+
 	// Используется функция http.NewServeMux() для инициализации нового рутера
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
@@ -24,7 +24,4 @@ func main() {
 	// мы используем функцию log.Fatal() для логирования ошибок. Обратите внимание
 	// что любая ошибка, возвращаемая от http.ListenAndServe(), всегда non-nil.
 	log.Fatal(err)
-	
-	
-	// вот и разобрался с gitHub
 }
