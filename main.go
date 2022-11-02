@@ -20,13 +20,25 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 // Обработчик для отображения содержимого заметки.
-func showSnippert(w http.ResponseWriter, r *http.Request) {
+func showSnippet(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Отоброжение заметки..."))
 }
 
 // Обработчик для создания новой заметки.
 func createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Форма для создания новой заметки..."))
+
+	// Если это не так, то вызывается метод w.WriteHeader() для возвращения статус-кода 405
+	// и вызывается метод w.Write() для возвращения тела-ответа с текстом "Метод запрещен".
+	// Затем мы завершаем работу функции вызвав "return", чтобы
+	// последующий код не выполнялся.
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(405)
+		w.Write([]byte("Get-метод звпрещен!"))
+		return
+	}
+
+	w.Write([]byte("Создания новой заметки..."))
 }
 
 func main() {
@@ -34,8 +46,8 @@ func main() {
 	// Используется функция http.NewServeMux() для инициализации нового рутера
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippert", showSnippert)
-	mux.HandleFunc("/snippert/create", createSnippet)
+	mux.HandleFunc("/snippet", showSnippet)
+	mux.HandleFunc("/snippet/create", createSnippet)
 
 	log.Println("Запуск веб-сервера на http://127.0.0.1:4000")
 
