@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -11,8 +13,27 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// Инициализируем срез содержащий пути к двум файлам.
+	file := []string{
+		"./ui/html/home.page.tmpl",
+		"./ui/html/base.layout.tmpl",
+		"./ui/html/footer.partial.tmpl",
+	}
 
-	w.Write([]byte("Привет из Snippetbox"))
+	// Используем функцию template.ParseFiles() для чтения файла шаблона.
+	ts, err := template.ParseFiles(file...)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	// Затем мы используем метод Execute() для записи содержимого
+	err = ts.Execute(w, nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+	}
 }
 
 func showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +45,6 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Отображение определенной заметки с ID %d...", id)
 }
-
 func createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
