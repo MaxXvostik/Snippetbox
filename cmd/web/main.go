@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"
@@ -16,11 +18,21 @@ type application struct {
 func main() {
 
 	addr := flag.String("addr", ":4000", "Сетевой адрес HTTP")
-	// Мы вызываем функцию flag.Parse() для извлечения флага из командной строки.
+	// Определение нового флага из командной строки для настройки MySQL подключения.
+	dsn := flag.String("dsn", "web:12345@/snippetbox?parseTime=true", "Название MySQL источника данных")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "EROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// Чтобы функция main() была более компактной, мы поместили код для создания
+	// пула соединений в отдельную функцию openDB().
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	defer db.Close()
 
 	app := &application{
 		errorLog: errorLog,
@@ -34,8 +46,19 @@ func main() {
 	}
 
 	infoLog.Printf("Запуск сервера на %s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 type neuteredFileSystem struct {
