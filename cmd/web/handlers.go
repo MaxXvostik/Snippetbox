@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"snippetbox/pkg/models"
 	"strconv"
 )
 
@@ -40,7 +42,17 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Отображение определенной заметки с ID %d...", id)
+	s, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "%v", s)
 }
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -48,6 +60,17 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	// Создаем несколько переменных, содержащих тестовые данные. Мы удалим их позже.
+	title := "История про улитку"
+	content := "Улитка выползла из раковины,\nвытянула рожки,\nи опять подобрала их."
+	expires := "7"
 
-	w.Write([]byte("Создание новой заметки..."))
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
+	//w.Write([]byte("Создание новой заметки..."))
 }
