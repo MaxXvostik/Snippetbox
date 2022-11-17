@@ -28,7 +28,6 @@ func (m *SnippetModel) Insert(title, content, expires string) (int, error) {
 		return 0, err
 	}
 	return int(id), nil
-
 }
 
 // Get
@@ -55,5 +54,29 @@ func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
 // Latest
 
 func (m *SnippetModel) Latest() ([]*models.Snippet, error) {
-	return nil, nil
+
+	stmt := `SELECT id , title , content, created, expires FROM snippets
+WHERE expires > UTC_TIMESTAMP() ORDER BY created DESC LIMIT 10`
+
+	row, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	var snippets []*models.Snippet
+
+	for row.Next() {
+		s := &models.Snippet{}
+
+		err = row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		snippets = append(snippets, s)
+	}
+	if err = row.Err(); err != nil {
+		return nil, err
+	}
+	return snippets, nil
 }
